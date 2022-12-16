@@ -1,7 +1,7 @@
 const express = require("express");
 const verifyToken = require("./verify-token");
 const User = require("../Models/User");
-const { updateUser, deleteUser, getUser } = require("./user-helper");
+const { updateUser, deleteUser, getUser, subscribe } = require("./user-helper");
 const router = express.Router();
 
 //update
@@ -14,9 +14,7 @@ router.delete("/users/:id", verifyToken, deleteUser);
 router.get("/users/find/:id", getUser);
 
 //subscribe
-router.put("/users/subscribe/:id", verifyToken, (req, res) => {
-  res.send("it is working");
-});
+router.put("/users/subscribe/:id", verifyToken, subscribe);
 
 //unsubscribe
 router.put("/users/unsubscribe/:id", verifyToken, (req, res) => {

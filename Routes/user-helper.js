@@ -35,11 +35,12 @@ exports.deleteUser = deleteUser;
 
 const getUser = async (req, res) => {
   try {
-    if (req.params.id === req.user.id) {
-      const getUser = await User.findById(req.params.id);
-      res.status(201).send(getUser);
+    const getUser = await User.findById(req.params.id);
+    const { password, ...others } = getUser._doc;
+    if (getUser) {
+      res.status(201).send(others);
     } else {
-      res.status(403).send({ Message: "You can View Your account only" });
+      res.status(404).send({ Message: "User not Found" });
     }
   } catch (error) {
     res.status(500).send({ Message: "Internal serverError" });
@@ -47,3 +48,17 @@ const getUser = async (req, res) => {
 };
 
 exports.getUser = getUser;
+
+const subscribe = async (req, res) => {
+  try {
+    await User.findById(req.user.id, {
+      $push: { subscribedUsers: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, { $inc: { subscribers: 1 } });
+    res.status(201).send({ Message: "Subscription Addded" });
+  } catch (error) {
+    res.status(500).send({ Message: "Internal serverError" });
+  }
+};
+
+exports.subscribe = subscribe;
