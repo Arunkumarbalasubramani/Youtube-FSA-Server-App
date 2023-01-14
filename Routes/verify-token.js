@@ -9,7 +9,7 @@ const verifyToken = (req, res, next) => {
     }
     jwt.verify(token, process.env.SECRET_KEY, (err, user) => {
       if (err) {
-        res.status(403).send({ Message: "You are not authenticated" });
+        res.status(403).send({ Message: "Token in Invalid" });
       } else {
         req.user = user;
         next();

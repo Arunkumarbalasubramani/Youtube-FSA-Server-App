@@ -62,3 +62,17 @@ const subscribe = async (req, res) => {
 };
 
 exports.subscribe = subscribe;
+
+const unSubscribe = async (req, res) => {
+  try {
+    await User.findById(req.user.id, {
+      $pull: { subscribedUsers: req.params.id },
+    });
+    await User.findByIdAndUpdate(req.params.id, { $inc: { subscribers: -1 } });
+    res.status(201).send({ Message: "Subscription removed" });
+  } catch (error) {
+    res.status(500).send({ Message: "Internal serverError" });
+  }
+};
+
+exports.unSubscribe = unSubscribe;

@@ -1,38 +1,42 @@
 const express = require("express");
 const verifyToken = require("./verify-token");
 const User = require("../Models/User");
-const { updateUser, deleteUser, getUser, subscribe } = require("./user-helper");
+const {
+  updateUser,
+  deleteUser,
+  getUser,
+  subscribe,
+  unSubscribe,
+} = require("./user-helper");
 const router = express.Router();
 
 //update
-router.put("/users/:id", verifyToken, updateUser);
+router.put("/user/:id", verifyToken, updateUser);
 
 //delete
-router.delete("/users/:id", verifyToken, deleteUser);
+router.delete("/user/:id", verifyToken, deleteUser);
 
 // getUser
-router.get("/users/find/:id", getUser);
+router.get("/user/find/:id", getUser);
 
 //subscribe
-router.put("/users/subscribe/:id", verifyToken, subscribe);
+router.put("/user/subscribe/:id", verifyToken, subscribe);
 
 //unsubscribe
-router.put("/users/unsubscribe/:id", verifyToken, (req, res) => {
-  res.send("it is working");
-});
+router.put("/user/unsubscribe/:id", verifyToken, unSubscribe);
 
 //histort
-router.get("/users/history/:", verifyToken, (req, res) => {
+router.get("/user/history/:", verifyToken, (req, res) => {
   res.send("it is working");
 });
 
 //watchLater
-router.get("/users/test", verifyToken, (req, res) => {
+router.get("/user/test", verifyToken, (req, res) => {
   res.send("it is working");
 });
 
 //like
-router.put("/users/like/:videoId", verifyToken, (req, res) => {
+router.put("/user/:videoId", verifyToken, (req, res) => {
   res.send("it is working");
 });
 //dislike
