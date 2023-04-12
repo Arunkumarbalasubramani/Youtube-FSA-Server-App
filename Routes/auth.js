@@ -10,7 +10,8 @@ router.post("/signup", signUp());
 
 //Sign-IN
 router.post("/signin", signIn);
-//Google Auth
-router.post("/signin");
+
+// //Google Auth
+// router.post("/signin");
 
 module.exports = router;

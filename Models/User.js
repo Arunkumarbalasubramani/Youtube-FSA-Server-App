@@ -16,16 +16,42 @@ const UserSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    img: {
+    avatar: {
       type: String,
     },
-    subscribers: {
-      type: Number,
-      default: 0,
+    subscribedChannels: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Channels",
+      },
+    ],
+    likedVideos: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "LikedVideos",
+      },
+    ],
+    watchLater: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "WatchLater",
+      },
+    ],
+    history: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "History",
+      },
+    ],
+    refreshToken: {
+      token: { type: String },
     },
-    subscribedUsers: {
-      type: [String],
-    },
+    comments: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Comments",
+      },
+    ],
   },
   { timestamps: true }
 );

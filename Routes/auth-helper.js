@@ -37,8 +37,8 @@ exports.signUp = signUp;
 
 const signIn = async (req, res) => {
   try {
-    const { name, password } = req.body;
-    const userFromDB = await User.findOne({ name: name });
+    const { email, password } = req.body;
+    const userFromDB = await User.findOne({ email: email });
 
     if (!userFromDB) {
       res.status(404).send({ Message: "User Not Found" });
@@ -50,15 +50,30 @@ const signIn = async (req, res) => {
       if (!isPasswordCorrect) {
         res.status(400).send({ Message: "Wrong Credentials" });
       } else {
-        const token = jwt.sign({ id: userFromDB._id }, process.env.SECRET_KEY);
-        const { password, ...others } = userFromDB._doc;
+        const accessToken = jwt.sign(
+          { id: userFromDB._id },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "30m" }
+        );
+        const refreshToken = jwt.sign(
+          { id: userFromDB._id },
+          process.env.REFRESH_TOKEN_SECRET,
+          { expiresIn: "1d" }
+        );
+        const saveTokeninDB = await User.findByIdAndUpdate(userFromDB._id, {
+          refreshToken: { token: refreshToken },
+        });
+        res.cookie("jwt", refreshToken, {
+          httpOnly: true,
+          sameSite: "None",
+          secure: true,
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+
+        req.accessToken = accessToken;
         res
-          .cookie("access_token", token, {
-            httpOnly: true,
-          })
-          .status(200)
-          .json(others);
-        // res.status(200).send({ Message: "User LoggedIn Successfully" });
+          .status(201)
+          .json({ Message: "User LoggedIn Successfully", accessToken });
       }
     }
   } catch (error) {

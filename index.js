@@ -4,6 +4,7 @@ const dbConnection = require("./Monogoconnection/Connection.js");
 const userRoutes = require("./Routes/User.js");
 const commentRoutes = require("./Routes/Comments.js");
 const authRoutes = require("./Routes/auth.js");
+const libRoutes = require("./Routes/library.js");
 const cookieParsor = require("cookie-parser");
 require("dotenv").config();
 mongoose.set("strictQuery", true);
@@ -20,6 +21,7 @@ app.use(cookieParsor());
 app.use(authRoutes);
 app.use(userRoutes);
 app.use(commentRoutes);
+app.use(libRoutes);
 
 app.listen(PORT, () => {
   console.log(`App Started and Listening to ${PORT}`);
