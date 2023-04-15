@@ -14,6 +14,7 @@ const subscribedChannesls = new mongoose.Schema({
   },
   channelInfo: {
     subscribers: { type: String },
+    title: { type: String },
   },
 });
 

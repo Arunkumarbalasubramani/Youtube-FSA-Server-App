@@ -22,7 +22,7 @@ const UserSchema = new mongoose.Schema(
     subscribedChannels: [
       {
         type: mongoose.Schema.Types.ObjectId,
-        ref: "Channels",
+        ref: "SubscribedChannels",
       },
     ],
     likedVideos: [

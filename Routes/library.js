@@ -5,6 +5,8 @@ const History = require("../Models/history");
 const LikedVideos = require("../Models/likedVideos");
 const WatchLater = require("../Models/watchLater");
 const User = require("../Models/User");
+const Channels = require("../Models/Channels");
+const mongoose = require("mongoose");
 //API to get All videos
 router.get("/:id/library", async (req, res) => {
   try {
@@ -31,10 +33,14 @@ router.post("/:userId/add/history", async (req, res) => {
       description,
       videoId,
     } = req.body;
-    const isVideo = await History.findOne({ videoId: videoId });
-    if (isVideo && userId === isVideo.user.toString()) {
-      return res.status(403).send({ Message: "Video found Already" });
-    }
+
+    // const existingHistory = await History.findOne({
+    //   videoId: videoId,
+    //   user: userId,
+    // });
+    // if (existingHistory) {
+    //   return res.status(403).send({ Message: "Video found Already" });
+    // }
 
     const createHistory = new History({
       videoId,
@@ -60,6 +66,20 @@ router.post("/:userId/add/history", async (req, res) => {
   }
 });
 
+//API to get All History Videos
+router.get("/:userId/history", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const videoData = await History.find({
+      user: userId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "User not Found" });
+    res.status(201).send(videoData);
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
 //API to Add a videoto Liked Videos Collection
 router.post("/:userId/add/likedvideos", async (req, res) => {
   try {
@@ -75,8 +95,11 @@ router.post("/:userId/add/likedvideos", async (req, res) => {
       description,
       videoId,
     } = req.body;
-    const isVideo = await LikedVideos.findOne({ videoId: videoId });
-    if (isVideo && userId === isVideo.user.toString()) {
+    const existingVideo = await LikedVideos.findOne({
+      videoId: videoId,
+      user: userId,
+    });
+    if (existingVideo) {
       return res.status(403).send({ Message: "Video found Already" });
     }
 
@@ -106,6 +129,20 @@ router.post("/:userId/add/likedvideos", async (req, res) => {
   }
 });
 
+//API to get All LikedVideos Videos
+router.get("/:userId/likedvideos", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const videoData = await LikedVideos.find({
+      user: userId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "User not Found" });
+    res.status(201).send(videoData);
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
 //API to Add a videoto WatchLater  Collection
 router.post("/:userId/add/watchlater", async (req, res) => {
   try {
@@ -121,8 +158,11 @@ router.post("/:userId/add/watchlater", async (req, res) => {
       description,
       videoId,
     } = req.body;
-    const isVideo = await WatchLater.findOne({ videoId: videoId });
-    if (isVideo && userId === isVideo.user.toString()) {
+    const existingVideo = await WatchLater.findOne({
+      videoId: videoId,
+      user: userId,
+    });
+    if (existingVideo) {
       return res.status(403).send({ Message: "Video found Already" });
     }
 
@@ -153,4 +193,190 @@ router.post("/:userId/add/watchlater", async (req, res) => {
   }
 });
 
+router.get("/:userId/watchlater", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const videoData = await WatchLater.find({
+      user: mongoose.Types.ObjectId(userId),
+    });
+    if (!videoData) return res.status(404).send({ Message: "User not Found" });
+    res.status(201).send(videoData);
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+//API to add Subscriptions
+router.post("/:userId/add/subscriptions", async (req, res) => {
+  try {
+    const userId = mongoose.Types.ObjectId(req.params.userId);
+
+    const existingSubscription = await Channels.findOne({
+      channelId: req.body.channelId,
+      user: userId,
+    });
+    if (existingSubscription) {
+      return res.status(403).send({ Message: "Channel Already Subscribed" });
+    }
+    const addSubscription = new Channels({ ...req.body, user: userId });
+    await addSubscription.save();
+
+    const updateUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        $push: { subscribedChannels: addSubscription._id },
+      },
+      { new: true }
+    );
+    res
+      .status(201)
+      .json({ Message: "Channel subscribed", id: addSubscription._id });
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+router.get("/:userId/subscriptions", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const channelData = await Channels.find({
+      user: mongoose.Types.ObjectId(userId),
+    });
+    if (!channelData)
+      return res.status(404).send({ Message: "User not Found" });
+    res.status(201).send(channelData);
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+router.get("/:userId/library", async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const userLibrary = await User.findById(userId)
+      .populate({ path: "watchLater" })
+      .populate({ path: "likedVideos" })
+      .populate({ path: "history" });
+    if (!userLibrary)
+      return res.status(404).send({ Message: "User not Found" });
+    res.status(201).send(userLibrary);
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+router.delete("/:userId/likedvideos/delete/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+    const videoData = await LikedVideos.findOneAndRemove({
+      videoId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "Video not Found" });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { likedVideos: videoData._id } },
+      { new: true }
+    );
+    user.save();
+    res.status(201).json({ Message: "Video removed Successfully" });
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+router.delete("/:userId/watchlater/delete/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+    const videoData = await WatchLater.findOneAndRemove({
+      videoId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "Video not Found" });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { watchLater: videoData._id } },
+      { new: true }
+    );
+    user.save();
+    res.status(201).json({ Message: "Video removed Successfully" });
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+router.delete("/:userId/history/delete/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+    const videoData = await History.findOneAndRemove({
+      videoId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "Video not Found" });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { history: videoData._id } },
+      { new: true }
+    );
+    user.save();
+    res.status(201).json({ Message: "Video removed Successfully" });
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+
+router.delete("/:userId/history/delete/:videoId", async (req, res) => {
+  try {
+    const { userId, videoId } = req.params;
+    const videoData = await History.findOneAndRemove({
+      videoId,
+    });
+    if (!videoData) return res.status(404).send({ Message: "Video not Found" });
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $pull: { watchLater: videoData._id } },
+      { new: true }
+    );
+    user.save();
+    res.status(201).json({ Message: "Video removed Successfully" });
+  } catch (error) {
+    res.status(500).json({ Error: `${error}` });
+  }
+});
+router.delete("/:userId/delete/likedVideos", async (req, res) => {
+  try {
+    const result = await LikedVideos.deleteMany({});
+    const user = await User.findById(req.params.userId);
+    user.history = [];
+    await user.save();
+    res
+      .status(200)
+      .json({ message: `Deleted ${result.deletedCount} documents` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+router.delete("/:userId/delete/watchlater", async (req, res) => {
+  try {
+    const result = await WatchLater.deleteMany({});
+    const user = await User.findById(req.params.userId);
+    user.history = [];
+    await user.save();
+    res
+      .status(200)
+      .json({ message: `Deleted ${result.deletedCount} documents` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+router.delete("/:userId/delete/history", async (req, res) => {
+  try {
+    const result = await History.deleteMany({});
+    const user = await User.findById(req.params.userId);
+    user.history = [];
+    await user.save();
+    res
+      .status(200)
+      .json({ message: `Deleted ${result.deletedCount} documents` });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
 module.exports = router;

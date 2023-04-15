@@ -16,7 +16,7 @@ const verifyToken = (req, res, next) => {
       }
     });
   } catch (error) {
-    response.status(401).send({ Error: error.message });
+    res.status(401).send({ Error: error.message });
   }
 };
 module.exports = verifyToken;

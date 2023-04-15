@@ -2,15 +2,16 @@ const mongoose = require("mongoose");
 
 const CommentsSchema = new mongoose.Schema(
   {
-    userID: {
-      type: String,
+    userId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
       required: true,
     },
     videoId: {
       type: String,
       required: true,
     },
-    description: {
+    commentText: {
       type: String,
       required: true,
     },
